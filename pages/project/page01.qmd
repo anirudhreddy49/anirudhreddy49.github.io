@@ -1,83 +1,98 @@
 ---
-title: "This is the pages/project/page01.qmd title"
+title: "Fourth Down Aggression in the NFL"
 ---
 
-This is a Quarto website.
-
-## This is a header
-
-With content ... 
-
-### And a sub-header 
-
-And more content ... 
-
-along with full URL links <https://quarto.org/docs/websites> or  labelled [Claremont McKenna College](https://cmc.edu) links.
-
-
-### And a code block 
-
-```{r, loading-libraries-and-functions}
+```{r loading-libraries-and-functions}
 #| message: false
 #| warning: false
 #| include: false
 
-# libraries
 library(here)
-library(ggplot2) 
-library(dplyr) 
-source(here::here("pages", "project", "src", "functions", "save_plot_as_png.R"))
+library(ggplot2)
+library(dplyr)
+library(scales)
+source(here("pages", "project", "src", "functions", "save_plot_as_png.R"))
 ```
 
-
-```{r, getting-data}
+```{r getting-data}
 #| message: false
 #| warning: false
 #| include: false
 
-# call script to read clean/wrangle and write data for later use 
-source(here::here("pages", "project", "src", "data", "data_cleaning.R"))
+# run the cleaning script, which reads the raw data and writes the cleaned file
+source(here("pages", "project", "src", "data", "nfl_data_cleaning.R"))
 
-# read data
-mtcars <- readRDS(here::here("pages", "project", "data", "mtcars.Rds"))
+# read the cleaned data produced by the script above
+fourth_down <- readRDS(
+  here("pages", "project", "data", "cleaned", "nfl_fourth_down_cleaned.Rds")
+)
 ```
 
+## Introduction
 
-```{r, plot-mpg-by-wt-for-cyl}
+WRITE YOUR INTRO HERE. What question are you asking and why does it matter?
+
+```{r plot-overall-trend}
 #| echo: false
 #| message: false
 #| warning: false
 
-# create plot
-# recommendation: always save plots as png so that you have an easily accessible
-# plot file available for other purpose (slide, sharing, etc.); extracting plots
-# from a webpage manually is more difficult 
-# then embed the png into the webpage 
-#
-p <- 
-  mtcars |>
-  # get only 6 cylinder cars
-  filter(cyl %in% 4:6) |>
-  ggplot(mapping = aes(x = wt, y = mpg)) +
-  geom_point()
-```
+overall_trend <- fourth_down |>
+  group_by(season) |>
+  summarise(go_rate = mean(went_for_it), .groups = "drop") |>
+  ggplot(mapping = aes(x = season, y = go_rate)) +
+  geom_line(linewidth = 1, color = "#1B9E77") +
+  geom_point(size = 2, color = "#1B9E77") +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  scale_x_continuous(breaks = seq(2010, 2024, by = 2)) +
+  labs(
+    title = "WRITE A TITLE",
+    subtitle = "WRITE A SUBTITLE",
+    x = "Season",
+    y = "Share of fourth downs",
+    caption = "Source: nflfastR play-by-play, 2010-2024"
+  ) +
+  theme_minimal()
 
-<!-- SAVE PLOT AS PNG -->
-
-```{r, saveplot}
-#| message: false
-#| warning: false
-#| include: false
-
-# save the plot as a .png file using the save_plot_as_png()
 save_plot_as_png(
-  plot = p,
-  file_name = "mpg-by-wt-for-cyl.png"
+  plot = overall_trend,
+  file_name = "fourth-down-trend.png"
 )
 ```
 
-## Plot Header
+![](/pages/project/figs/fourth-down-trend.png){width=90% fig-alt="Line chart of NFL fourth down go-for-it rate by season from 2010 to 2024."}
 
-![](/pages/project/figs/mpg-by-wt-for-cyl.png){width=80% fig-alt="This is alt-text for describing the plot for screen readers ..."}
+WRITE WHAT THIS PLOT SHOWS.
 
+```{r plot-by-half}
+#| echo: false
+#| message: false
+#| warning: false
 
+half_trend <- fourth_down |>
+  mutate(half = if_else(qtr <= 2, "First half", "Second half")) |>
+  group_by(season, half) |>
+  summarise(go_rate = mean(went_for_it), .groups = "drop") |>
+  ggplot(mapping = aes(x = season, y = go_rate, color = half)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  scale_x_continuous(breaks = seq(2010, 2024, by = 2)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    title = "WRITE A TITLE",
+    subtitle = "WRITE A SUBTITLE",
+    x = "Season",
+    y = "Share of fourth downs",
+    color = NULL,
+    caption = "Source: nflfastR play-by-play, 2010-2024"
+  ) +
+  theme_minimal()
+
+save_plot_as_png(
+  plot = half_trend,
+  file_name = "fourth-down-by-half.png"
+)
+```
+
+![](/pages/
